@@ -1,0 +1,100 @@
+body {
+    background-color: #f2f2f2;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 400;
+    color: #262626;
+    text-align: center;
+    height: 100vh;
+}
+
+h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+h4 {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+}
+
+p {
+    font-size: 1.2rem;
+    font-weight: 400;
+    margin-bottom: 1rem;
+}
+
+label {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-right: 3px;
+}
+
+.audio-section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    height: 30vh;
+}
+
+.custom-select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 10vh;
+  background: #f5f5f5;
+}
+
+.custom-select select {
+  width: 320px;
+  height: 50px;
+  font-size: 1.3rem;
+  color: #00ff91;
+  background: #333;
+  border: 2px solid #00ff91;
+  border-radius: 5px;
+  outline: none;
+  padding: 0 10px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+}
+
+.select-selected {
+  background-color: #00ff91;
+}
+
+.select-selected:after {
+  position: absolute;
+  content: "";
+  top: 14px;
+  right: 10px;
+  width: 0;
+  height: 0;
+  border: 6px solid transparent;
+  border-color: #00ff91 transparent transparent transparent;
+}
+
+.select-selected.select-arrow-active:after {
+  border-color: transparent transparent #00ff91 transparent;
+  top: 7px;
+}
+
+@media only screen and (max-width: 1200px) {
+    label {
+        font-size: 1rem;
+    }
+
+    .audio-section {
+        flex-direction: column;
+        height: 50vh;
+    }
+
+    .custom-select select {
+        height: 10vh;
+        width: 250px;
+    }
+}

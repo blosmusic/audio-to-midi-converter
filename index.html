@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./assests/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.40/Tone.js"></script>
+    <title>Audio to MIDI Converter</title>
+</head>
+<body>
+    <h1>Audio to MIDI Converter</h1>
+    <div class="audio-section">
+
+        <div class="custom-select">
+            <label for="audio-devices-input">Select Input:</label>
+            <select id="audio-devices-input"></select>
+        </div>
+
+        <div class="custom-select">
+            <label for="audio-source">Select Audio:</label>
+            <select id="audio-source">
+                <option value="none" selected>Select Type:</option>
+                <option value="mono">Mono</option>
+                <option value="stereo">Stereo</option>
+            </select>
+        </div>
+
+    </div>
+
+        <div id="info">
+            <h4>Click to Enable Audio</h4>
+            <p>Users can select an audio input for their chosen instrument to play notes that will be converted into MIDI values.</p>
+            <p>Audio can be summed to Mono or processed in Stereo.</p>
+            <p><u>NOTE:</u> Headphones is suggested if using a devices speaker as both input and output to stop feedback.</p>
+        </div>
+        
+</body>
+<script src="./assests/app.js"></script>
+</html>
