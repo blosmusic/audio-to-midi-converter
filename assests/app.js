@@ -166,7 +166,7 @@ function frequencyToMIDI(frequency) {
 
 function playMIDI(midiInputNote) {
   console.log("MIDI Input:", midiInputNote);
-  synth.triggerAttack(Tone.Midi(midiInputNote).toFrequency(), now);
+  synth.triggerAttack(Tone.Midi(midiInputNote).toFrequency(), "4n", now);
 }
 
 // Select audio type
