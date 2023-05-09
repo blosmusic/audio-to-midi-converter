@@ -158,7 +158,7 @@ function getPitch() {
         pitchLength(inputLevelValue);
         synth.triggerAttack(
           Tone.Midi(midiInputNote).toFrequency(),
-          "4n",
+          "4n", // add time here
           now
         );
       } else {
