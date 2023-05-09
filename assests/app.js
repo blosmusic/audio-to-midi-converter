@@ -2,8 +2,8 @@ const select = document.getElementById("audio-devices-input");
 const selectedOptions = document.getElementById("audio-source");
 
 // Create a new AudioContext
-// const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-// audioContext.suspend();
+let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+audioContext.suspend();
 let mediaStream;
 let sourceNode;
 
@@ -14,7 +14,7 @@ let model_url =
 // Create midi and synth objects
 let midiInput;
 const now = Tone.now();
-const synth = new Tone.MonoSynth({
+const synth = new Tone.Synth({
   oscillator: {
     type: "sine2",
   },
@@ -132,8 +132,9 @@ function getPitch() {
       frequency = frequency.toFixed(2);
       noteValueOfFrequency(frequency);
       console.log("The Freq is:", frequency, "Hz", "Note:", noteValueOfFrequency(frequency));
-      midiInput = frequencyToMIDI(frequency);
+      midiInput = noteValueOfFrequency(frequency);
       console.log("The MIDI is:", frequencyToMIDI(frequency));
+      playMIDI(midiInput);
     } else if (err) {
       err = "No pitch detected";
       console.log("ml5:", err);
@@ -149,8 +150,12 @@ function noteValueOfFrequency(frequencyValue) {
 
 function frequencyToMIDI(frequency) {
   let midiNum = Tone.Frequency(frequency, "hz").toMidi();
-  midiInput = midiNum;
   return midiNum;
+}
+
+function playMIDI(midiInputNote) {
+  console.log("MIDI Input:", midiInputNote);
+  synth.triggerAttack(Tone.Midi(midiInputNote).toFrequency(), now);
 }
 
 // Select audio type
@@ -175,6 +180,7 @@ selectedOptions.addEventListener("change", (event) => {
 function monoAudio() {
   console.log("Mono");
   startAudio();
+  midiInput = null;
   const monoOutput = new Tone.Mono();
   mic.connect(monoOutput);
   monoOutput.toDestination();
@@ -186,9 +192,6 @@ function midiAudio() {
   mic.close();
 
   startAudio();
-
-  console.log("MIDI Input:", midiInput);
-  synth.triggerAttack(Tone.Midi(midiInput).toFrequency(), now);
 }
 
 // MUTE AUDIO
