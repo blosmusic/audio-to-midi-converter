@@ -11,20 +11,20 @@ let sourceNode;
 let model_url =
   "https://cdn.jsdelivr.net/gh/ml5js/ml5-data-and-models/models/pitch-detection/crepe";
 
-// Create midi and synth objects
-let midiInput;
+// Create synth object
 const now = Tone.now();
 const synth = new Tone.Synth({
   oscillator: {
-    type: "sine2",
+    type: "sine",
   },
   envelope: {
     attack: 0.01,
     decay: 0.1,
-    sustain: 0.1,
-    release: 0.01,
+    sustain: 1.0,
+    release: 0.1,
   },
 }).toDestination();
+const activeNotes = [];
 
 // Handle device selection change
 select.addEventListener("change", async () => {
@@ -117,25 +117,36 @@ function startAudio() {
     .then(() => {
       console.log("Mic is open");
       resumeAudio();
+
+      setup();
     })
     .catch((e) => {
       console.log("Mic is not open");
       console.log(e);
     });
-
-    setup();
 }
 
 function getPitch() {
   pitch.getPitch(function (err, frequency) {
     if (frequency) {
       frequency = frequency.toFixed(2);
-      noteValueOfFrequency(frequency);
-      console.log("The Freq is:", frequency, "Hz", "Note:", noteValueOfFrequency(frequency));
-      midiInput = noteValueOfFrequency(frequency);
-      console.log("The MIDI is:", frequencyToMIDI(frequency));
+      let midiInput = noteValueOfFrequency(frequency);
+      console.log(
+        "The Freq is:",
+        frequency,
+        "Hz",
+        "Note:",
+        noteValueOfFrequency(frequency),
+        "The MIDI is:",
+        frequencyToMIDI(frequency)
+      );
+
       playMIDI(midiInput);
-    } else if (err) {
+    } else {
+      synth.triggerRelease(now + 0.5);
+    }
+
+    if (err) {
       err = "No pitch detected";
       console.log("ml5:", err);
     }
