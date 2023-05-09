@@ -106,7 +106,12 @@ function modelLoaded() {
 }
 
 // Allow audio to start
-const meter = new Tone.Meter();
+const meter = new Tone.Meter({
+  channels: 1,
+  smoothing: 0.9,
+  normalRange: true,
+  bufferSize: 1024,
+});
 let inputLevelValueRead = null;
 
 const mic = new Tone.UserMedia().chain(meter);
@@ -131,19 +136,36 @@ function getPitch() {
     if (frequency) {
       frequency = frequency.toFixed(2);
       let midiInput = noteValueOfFrequency(frequency);
+      let inputLevelValue = meter.getValue();
+      let midiInputNote = frequencyToMIDI(frequency);
+
       console.log(
         "The Freq is:",
         frequency,
         "Hz",
+        "\t",
         "Note:",
-        noteValueOfFrequency(frequency),
+        midiInput,
+        "\t",
         "The MIDI is:",
-        frequencyToMIDI(frequency)
+        midiInputNote,
+        "\t",
+        "The Level is:",
+        inputLevelValue.toFixed(2)
       );
 
-      playMIDI(midiInput);
+      if (inputLevelValue > 0.08) {
+        pitchLength(inputLevelValue);
+        synth.triggerAttack(
+          Tone.Midi(midiInputNote).toFrequency(),
+          "4n",
+          now
+        );
+      } else {
+        synth.triggerRelease(now);
+      }
     } else {
-      synth.triggerRelease(now + 0.5);
+      synth.triggerRelease(now + 0.1);
     }
 
     if (err) {
@@ -164,9 +186,10 @@ function frequencyToMIDI(frequency) {
   return midiNum;
 }
 
-function playMIDI(midiInputNote) {
-  console.log("MIDI Input:", midiInputNote);
-  synth.triggerAttack(Tone.Midi(midiInputNote).toFrequency(), "4n", now);
+function pitchLength(inputLevelValue) {
+  if (inputLevelValueRead !== inputLevelValue) {
+    inputLevelValueRead = inputLevelValue;
+  }
 }
 
 // Select audio type
