@@ -15,7 +15,7 @@ let model_url =
 const now = Tone.now();
 const synth = new Tone.Synth({
   oscillator: {
-    type: "sine",
+    type: "square",
   },
   envelope: {
     attack: 0.01,
@@ -23,8 +23,9 @@ const synth = new Tone.Synth({
     sustain: 1.0,
     release: 0.1,
   },
+
+  volume: -10,
 }).toDestination();
-const activeNotes = [];
 
 // Handle device selection change
 select.addEventListener("change", async () => {
