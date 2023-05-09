@@ -2,68 +2,27 @@ const select = document.getElementById("audio-devices-input");
 const selectedOptions = document.getElementById("audio-source");
 
 // Create a new AudioContext
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-audioContext.suspend();
+// const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+// audioContext.suspend();
 let mediaStream;
 let sourceNode;
+
+// ml5 code from https://learn.ml5js.org/#/reference/pitch-detection
+let model_url =
+  "https://cdn.jsdelivr.net/gh/ml5js/ml5-data-and-models/models/pitch-detection/crepe";
 
 // Create midi and synth objects
 let midiInput;
 const now = Tone.now();
-const synth = new Tone.PolySynth({
+const synth = new Tone.MonoSynth({
   oscillator: {
     type: "sine2",
   },
   envelope: {
-    attack: 0.1,
+    attack: 0.01,
     decay: 0.1,
-    sustain: 0.5,
-    release: 0.1,
-  },
-
-  volume: -12,
-
-  // Set the polyphony to 4 voices
-  polyphony: 4,
-
-  // Set the maximum number of voices to 4
-  maxPolyphony: 4,
-
-  // Set the portamento to 0.1 seconds
-  portamento: 0.1,
-
-  // Set the detune to 0 cents
-  detune: 0,
-
-  // Set the voice vibrato to 0.5 Hz with a depth of 0.5 semitones
-  vibrato: {
-    frequency: 0.5,
-    depth: 0.5,
-    type: "sine",
-  },
-
-  // Set the voice tremolo to 4 Hz with a depth of 0.25
-  tremolo: {
-    frequency: 4,
-    depth: 0.25,
-    type: "sine",
-  },
-
-  // Set the voice panning to -20% left with a width of 40%
-  panning: {
-    pan: -0.2,
-    width: 0.4,
-  },
-
-  // Set the voice volume to -12 dB
-  volume: -12,
-
-  // Set the voice filter frequency to 440 Hz with a Q of 1
-  filter: {
-    type: "lowpass",
-    frequency: 440,
-    rolloff: -12,
-    Q: 1,
+    sustain: 0.1,
+    release: 0.01,
   },
 }).toDestination();
 
@@ -129,6 +88,23 @@ document.body.addEventListener("click", async () => {
   console.log("audio is ready");
 });
 
+async function setup() {
+  audioContext = new AudioContext();
+  stream = await navigator.mediaDevices.getUserMedia({
+    audio: true,
+    video: false,
+  });
+  startPitch(stream, audioContext);
+}
+
+function startPitch(stream, audioContext) {
+  pitch = ml5.pitchDetection(model_url, audioContext, stream, modelLoaded);
+}
+
+function modelLoaded() {
+  getPitch();
+}
+
 // Allow audio to start
 const meter = new Tone.Meter();
 let inputLevelValueRead = null;
@@ -146,6 +122,35 @@ function startAudio() {
       console.log("Mic is not open");
       console.log(e);
     });
+
+    setup();
+}
+
+function getPitch() {
+  pitch.getPitch(function (err, frequency) {
+    if (frequency) {
+      frequency = frequency.toFixed(2);
+      noteValueOfFrequency(frequency);
+      console.log("The Freq is:", frequency, "Hz", "Note:", noteValueOfFrequency(frequency));
+      midiInput = frequencyToMIDI(frequency);
+      console.log("The MIDI is:", frequencyToMIDI(frequency));
+    } else if (err) {
+      err = "No pitch detected";
+      console.log("ml5:", err);
+    }
+    getPitch();
+  });
+}
+
+function noteValueOfFrequency(frequencyValue) {
+  frequencyValue = Tone.Frequency(frequencyValue, "hz").toNote();
+  return frequencyValue;
+}
+
+function frequencyToMIDI(frequency) {
+  let midiNum = Tone.Frequency(frequency, "hz").toMidi();
+  midiInput = midiNum;
+  return midiNum;
 }
 
 // Select audio type
@@ -153,11 +158,11 @@ selectedOptions.addEventListener("change", (event) => {
   const selectedOptionValue = event.target.value;
 
   switch (selectedOptionValue) {
-    case "mono":
+    case "audio":
       monoAudio();
       break;
-    case "stereo":
-      stereoAudio();
+    case "midi":
+      midiAudio();
       break;
     default:
       muteAudio();
@@ -175,100 +180,15 @@ function monoAudio() {
   monoOutput.toDestination();
 }
 
-// STEREO AUDIO
-function stereoAudio() {
-  console.log("Stereo");
-  startAudio();
-  const monoLeft = new Tone.Mono({ channelCount: 1 });
-  const monoRight = new Tone.Mono({ channelCount: -1 });
-  mic.connect(monoLeft, monoRight);
-  monoLeft.toDestination();
-  monoRight.toDestination();
-}
-
 // MIDI AUDIO
 function midiAudio() {
   console.log("Midi");
   mic.close();
 
-  const midi = new Tone.Midi();
+  startAudio();
 
-  // Enable the MIDI connection
-  navigator
-    .requestMIDIAccess()
-    .then((access) => {
-      const inputSelector = document.getElementById("midi-input-selector"); // HTML element to display input selection
-
-      // Populate the inputSelector with available MIDI input options
-      access.inputs.forEach((input) => {
-        const option = document.createElement("option");
-        option.value = input.id;
-        option.text = input.name;
-        inputSelector.appendChild(option);
-      });
-
-      // Event handler for input selection change
-      inputSelector.addEventListener("change", (event) => {
-        const selectedInputId = event.target.value;
-
-        // Clear existing input event listeners for all devices
-        access.inputs.forEach((input) => {
-          input.onmidimessage = null;
-        });
-
-        if (
-          selectedInputId !== "none" &&
-          selectedOptions.value !== "mono" &&
-          selectedOptions.value !== "stereo"
-        ) {
-          const selectedInput = access.inputs.get(selectedInputId);
-          // Enable MIDI input for the selected device
-          selectedInput.onmidimessage = handleMIDIMessage;
-        }
-      });
-
-      // Event handler for audio output selection change
-      selectedOptions.addEventListener("change", (event) => {
-        const selectedOutput = event.target.value;
-        const selectedInputId = inputSelector.value;
-
-        if (
-          selectedOutput === "mono" ||
-          selectedOutput === "stereo" ||
-          selectedOutput === "none"
-        ) {
-          // Clear existing input event listeners for all devices
-          access.inputs.forEach((input) => {
-            input.onmidimessage = null;
-          });
-        } else if (selectedInputId !== "none") {
-          const selectedInput = access.inputs.get(selectedInputId);
-          // Enable MIDI input for the selected device
-          selectedInput.onmidimessage = handleMIDIMessage;
-        }
-      });
-    })
-    .catch((error) => {
-      console.log("MIDI connection error:", error);
-    });
-
-  // Event handler for MIDI messages
-  function handleMIDIMessage(message) {
-    const command = message.data[0] & 0xf0;
-    const note = message.data[1];
-    const velocity = message.data[2];
-
-    if (command === 144 && velocity > 0) {
-      // Note On event
-      const frequency = Tone.Midi(note).toFrequency();
-      synth.triggerAttack(frequency);
-      console.log("note on", note, velocity);
-    } else if (command === 128 || (command === 144 && velocity === 0)) {
-      // Note Off event
-      const frequency = Tone.Midi(note).toFrequency();
-      synth.triggerRelease(frequency);
-    }
-  }
+  console.log("MIDI Input:", midiInput);
+  synth.triggerAttack(Tone.Midi(midiInput).toFrequency(), now);
 }
 
 // MUTE AUDIO
