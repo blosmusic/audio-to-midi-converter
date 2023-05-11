@@ -15,7 +15,7 @@ let model_url =
 const now = Tone.now();
 const synth = new Tone.Synth({
   oscillator: {
-    type: "square",
+    type: "sawtooth",
   },
   envelope: {
     attack: 0.01,
@@ -24,7 +24,7 @@ const synth = new Tone.Synth({
     release: 0.1,
   },
 
-  volume: -10,
+  volume: -1,
 }).toDestination();
 
 // Handle device selection change
@@ -155,7 +155,7 @@ function getPitch() {
         inputLevelValue.toFixed(2)
       );
 
-      if (inputLevelValue > 0.08) {
+      if (inputLevelValue > 0.01) {
         pitchLength(inputLevelValue);
         synth.triggerAttack(
           Tone.Midi(midiInputNote).toFrequency(),
